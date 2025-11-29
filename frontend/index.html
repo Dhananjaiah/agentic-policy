@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Insurance Assistant</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 0 16px;
+    }
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+    }
+    .subtitle {
+      color: #555;
+      margin-bottom: 1.5rem;
+    }
+    .input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1rem;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 10px 16px;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: none;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+    }
+    button:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+    .answer-box {
+      margin-top: 1rem;
+      padding: 12px;
+      border-radius: 6px;
+      background: #f3f4f6;
+      min-height: 40px;
+      white-space: pre-wrap;
+    }
+    .debug {
+      margin-top: 0.5rem;
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+  <h1>Insurance Assistant</h1>
+  <div class="subtitle">
+    Ask about a policy or claim. Example: <code>Status of claim CLM-200000?</code>
+  </div>
+
+  <div class="input-row">
+    <input
+      type="text"
+      id="userInput"
+      placeholder="Type your question here (policy / claim status)..."
+    />
+    <button id="askBtn">Ask</button>
+  </div>
+
+  <div class="answer-box" id="answerBox">Answer will appear here.</div>
+  <div class="debug" id="debugBox"></div>
+
+  <script>
+    const input = document.getElementById("userInput");
+    const button = document.getElementById("askBtn");
+    const answerBox = document.getElementById("answerBox");
+    const debugBox = document.getElementById("debugBox");
+
+    async function askQuestion() {
+      const message = input.value.trim();
+      if (!message) return;
+
+      button.disabled = true;
+      answerBox.textContent = "Thinking...";
+      debugBox.textContent = "";
+
+      try {
+        const resp = await fetch("http://localhost:8000/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: "demo-user",
+            message: message,
+          }),
+        });
+
+        if (!resp.ok) {
+          answerBox.textContent = "Error from server: " + resp.status;
+          return;
+        }
+
+        const data = await resp.json();
+        answerBox.textContent = data.answer || "No answer returned.";
+
+        // optional: show some debug info
+        debugBox.textContent = data.data ? "Debug: response received." : "";
+      } catch (err) {
+        answerBox.textContent = "Request failed: " + err;
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    button.addEventListener("click", askQuestion);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        askQuestion();
+      }
+    });
+  </script>
+</body>
+</html>
+

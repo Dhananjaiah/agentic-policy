@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: insurance-postgres
+    environment:
+      POSTGRES_USER: insurance_user
+      POSTGRES_PASSWORD: insurance_pass
+      POSTGRES_DB: insurance_core
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./sql/init_core_schema.sql:/docker-entrypoint-initdb.d/init_core_schema.sql
+
